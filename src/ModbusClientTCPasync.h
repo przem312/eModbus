@@ -49,6 +49,15 @@ public:
 
   // Set maximum amount of messages awaiting a response. Subsequent messages will be queued.
   void setMaxInflightRequests(uint32_t maxInflightRequests);
+  
+  enum ClientState {
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED
+  };
+
+
+  ClientState state();
 
 protected:
 
@@ -103,6 +112,7 @@ protected:
       head(ModbusTCPhead()),
       sentTime(0),
       isSyncRequest(syncReq) {}
+      
   };
 
   // Base addRequest and syncRequest both must be present
@@ -111,7 +121,6 @@ protected:
 
   // addToQueue: send freshly created request to queue
   bool addToQueue(int32_t token, ModbusMessage request, bool syncReq = false);
-
   // send: send request via Client connection
   bool send(RequestEntry *request);
 
@@ -143,11 +152,7 @@ protected:
   uint16_t MTA_qLimit;              // Maximum number of requests to accept in queue
   uint32_t MTA_maxInflightRequests; // Maximum number of inflight requests
   uint32_t MTA_lastActivity;        // Last time there was activity (disabled when queues are not empty)
-  enum {
-    DISCONNECTED,
-    CONNECTING,
-    CONNECTED
-  } MTA_state;                      // TCP connection state
+                   // TCP connection state
   IPAddress MTA_host;
   uint16_t MTA_port;
 };
