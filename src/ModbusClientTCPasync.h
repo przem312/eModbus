@@ -59,6 +59,9 @@ public:
 
   ClientState state();
 
+// Remove all pending request from queue
+  void clearQueue();
+
 protected:
 
   // class describing the TCP header of Modbus packets
@@ -89,7 +92,7 @@ protected:
       return headRoom;
     }
 
-    inline ModbusTCPhead& operator= (ModbusTCPhead& t) {
+    inline ModbusTCPhead& operator= (const ModbusTCPhead& t) {
       transactionID = t.transactionID;
       protocolID    = t.protocolID;
       len           = t.len;
@@ -97,7 +100,7 @@ protected:
     }
 
   protected:
-    uint8_t headRoom[6];        // Buffer to hold MSB-first TCP header
+    uint8_t headRoom[6] = {0,0,0,0,0,0};        // Buffer to hold MSB-first TCP header
   };
 
   struct RequestEntry {
@@ -106,7 +109,7 @@ protected:
     ModbusTCPhead head;
     uint32_t sentTime;
     bool isSyncRequest;
-    RequestEntry(uint32_t t, ModbusMessage m, bool syncReq = false) :
+    RequestEntry(uint32_t t, const ModbusMessage& m, bool syncReq = false) :
       token(t),
       msg(m),
       head(ModbusTCPhead()),
@@ -116,8 +119,8 @@ protected:
   };
 
   // Base addRequest and syncRequest both must be present
-  Error addRequestM(ModbusMessage msg, uint32_t token);
-  ModbusMessage syncRequestM(ModbusMessage msg, uint32_t token);
+  Error addRequestM(ModbusMessage msg, uint32_t token) override;
+  ModbusMessage syncRequestM(ModbusMessage msg, uint32_t token) override;
 
   // addToQueue: send freshly created request to queue
   bool addToQueue(int32_t token, ModbusMessage request, bool syncReq = false);
@@ -127,7 +130,7 @@ protected:
   // receive: get response via Client connection
   // TCPResponse* receive(uint8_t* data, size_t length);
 
-  void isInstance() { return; }     // make class instantiable
+  void isInstance() override { return; }     // make class instantiable
 
   // TCP handling code, all static taking a class instancs as param
   void onConnected();
